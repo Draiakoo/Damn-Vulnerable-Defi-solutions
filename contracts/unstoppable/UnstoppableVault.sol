@@ -92,8 +92,12 @@ contract UnstoppableVault is IERC3156FlashLender, ReentrancyGuard, Owned, ERC462
     ) external returns (bool) {
         if (amount == 0) revert InvalidAmount(0); // fail early
         if (address(asset) != _token) revert UnsupportedCurrency(); // enforce ERC3156 requirement
+        // @audit if the nonReentrant variable is activated, it produces a DoS, because this function will revert
+        // @audit-ok this function can never be reverted because the nonReentrant modifier only applies to the hooks and those are not used anywhere
         uint256 balanceBefore = totalAssets();
+        // @audit if this if is always true it will be a DoS
         if (convertToShares(totalSupply) != balanceBefore) revert InvalidBalance(); // enforce ERC4626 requirement
+        // (totalSupply*balanceOf(address(this)) != balanceOf(address(this)))
         uint256 fee = flashFee(_token, amount);
         // transfer tokens out + execute callback on receiver
         ERC20(_token).safeTransfer(address(receiver), amount);

