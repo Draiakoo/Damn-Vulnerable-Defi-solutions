@@ -54,7 +54,7 @@ contract NaiveReceiverLenderPool is ReentrancyGuard, IERC3156FlashLender {
             FIXED_FEE,
             data
         ) != CALLBACK_SUCCESS) {
-            revert CallbackFailed();
+            revert ();
         }
 
         if (address(this).balance < balanceBefore + FIXED_FEE)
